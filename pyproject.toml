@@ -1,0 +1,18 @@
+[project]
+name = "pullsaw"
+version = "0.1.0"
+description = "Split large PRs into stacked PRs using Claude Code"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8.0",
+    "pyyaml>=6.0",
+    "rich>=13.0",
+]
+
+[project.scripts]
+pullsaw = "pullsaw.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
