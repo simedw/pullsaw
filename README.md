@@ -60,7 +60,7 @@ pullsaw --base main --head my-feature --strict --yes
 
 ## Configuration
 
-Create `.pullsaw.yml` in your repo root:
+Create `.pullsaw/config.yml` in your repo:
 
 ```yaml
 test_cmd: ["mix", "test", "--max-failures", "1"]

@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from .config import Config
+from .constants import PULLSAW_DIR
 
 
 @dataclass
@@ -139,7 +140,6 @@ def invoke_streaming(
     if resume_session:
         cmd.extend(["--resume", resume_session])
 
-    import sys
     from rich.console import Console
 
     console = Console()
@@ -152,7 +152,11 @@ def invoke_streaming(
         text=True,
     )
 
-    # Send prompt via stdin
+    # Send prompt via stdin (these are guaranteed non-None when PIPE is used)
+    assert process.stdin is not None
+    assert process.stdout is not None
+    assert process.stderr is not None
+
     process.stdin.write(prompt)
     process.stdin.close()
 
@@ -272,14 +276,11 @@ def _build_fix_tools(config: Config) -> list[str]:
     return tools
 
 
-SKIKT_DIR = ".pullsaw"
-
-
 def get_plan_file(repo_root: str, branch: str) -> str:
     """Get the plan file path for a branch."""
     # Sanitize branch name for filename
     safe_branch = branch.replace("/", "-").replace(" ", "-")
-    return f"{repo_root}/{SKIKT_DIR}/{safe_branch}-plan.yaml"
+    return f"{repo_root}/{PULLSAW_DIR}/{safe_branch}-plan.yaml"
 
 
 def generate_plan(
@@ -405,15 +406,15 @@ APPROACH:
 - For migration files: use EXACT filenames from target branch, don't generate new timestamps
 - For partial changes: use git show to see the target, then edit to match"""
 
-    prompt = f"""Implement step {step['id']} of a stacked PR split.
+    prompt = f"""Implement step {step["id"]} of a stacked PR split.
 
 BRANCHES:
 - Current branch: {current_branch}
 - Based on: {prev_branch}
 - Target reference: {original_head}
 
-GOAL: {step['goal']}
-TITLE: {step['title']}
+GOAL: {step["goal"]}
+TITLE: {step["title"]}
 
 STRATEGY:
 1. First, check what files changed: `git diff --name-only {prev_branch}..{original_head} -- <allowed_patterns>`
@@ -497,4 +498,3 @@ TIP: You can run tests with --failed flag to rerun only previously failed tests 
         allowed_tools=tools,
         resume_session=session_id,
     )
-

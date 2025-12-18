@@ -66,4 +66,3 @@ def validate_patterns(patterns: list[str]) -> list[str]:
             pass
 
     return errors
-

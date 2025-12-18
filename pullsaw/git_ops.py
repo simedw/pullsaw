@@ -1,9 +1,28 @@
 """Git operations with robust handling of all file status types."""
 
-import os
+import re
 import subprocess
+from contextlib import suppress
 from enum import Enum
 from pathlib import Path
+
+
+class GitError(Exception):
+    """Exception raised when a git command fails.
+
+    Attributes:
+        command: The git command that failed
+        returncode: The exit code
+        stderr: The error output from git
+    """
+
+    def __init__(self, command: list[str], returncode: int, stderr: str):
+        self.command = command
+        self.returncode = returncode
+        self.stderr = stderr
+        cmd_str = " ".join(command)
+        message = f"Git command failed: {cmd_str}\n{stderr.strip()}"
+        super().__init__(message)
 
 
 class FileStatus(Enum):
@@ -18,13 +37,26 @@ class FileStatus(Enum):
 
 
 def run_git(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
-    """Run a git command and return the result."""
-    return subprocess.run(
+    """Run a git command and return the result.
+
+    Args:
+        *args: Git command arguments
+        check: If True, raise GitError on non-zero exit
+
+    Raises:
+        GitError: If check=True and the command fails
+    """
+    result = subprocess.run(
         ["git", *args],
         capture_output=True,
         text=True,
-        check=check,
+        check=False,  # We handle checking ourselves
     )
+
+    if check and result.returncode != 0:
+        raise GitError(["git", *args], result.returncode, result.stderr)
+
+    return result
 
 
 def is_clean() -> bool:
@@ -167,19 +199,49 @@ def checkout_files(files: list[str]) -> None:
 
         if result.returncode == 0:
             # File exists in HEAD - restore it
-            run_git("restore", "--source=HEAD", "--staged", "--worktree", "--", filepath, check=False)
+            run_git(
+                "restore", "--source=HEAD", "--staged", "--worktree", "--", filepath, check=False
+            )
         else:
             # File doesn't exist in HEAD (newly added) - remove it
             run_git("rm", "-f", "--", filepath, check=False)
             # Also remove from working tree if still there (untracked)
-            if os.path.exists(filepath):
-                os.remove(filepath)
+            with suppress(FileNotFoundError):
+                Path(filepath).unlink()
+
+
+def sanitize_branch_name(name: str) -> str:
+    """Sanitize a string to be a valid git branch name.
+
+    Git branch names cannot contain:
+    - Space, ~, ^, :, ?, *, [, \\ (backslash)
+    - Consecutive dots (..)
+    - Leading or trailing dots or slashes
+    - @{ sequence
+    - Control characters
+
+    This function replaces problematic characters with hyphens and
+    cleans up the result.
+    """
+    # Replace problematic characters with hyphens
+    # Covers: space, ~, ^, :, ?, *, [, ], \, @
+    safe_name = re.sub(r"[\s~^:?*\[\]\\@/]+", "-", name)
+
+    # Remove consecutive dots (.. is invalid in git refs)
+    safe_name = re.sub(r"\.{2,}", ".", safe_name)
+
+    # Remove leading/trailing dots and hyphens
+    safe_name = safe_name.strip(".-")
+
+    # Collapse multiple consecutive hyphens
+    safe_name = re.sub(r"-{2,}", "-", safe_name)
+
+    return safe_name
 
 
 def create_branch(name: str, from_ref: str) -> str:
     """Create and checkout a new branch. Returns the sanitized branch name."""
-    # Sanitize branch name
-    safe_name = name.replace(" ", "-").replace("/", "-")
+    safe_name = sanitize_branch_name(name)
     run_git("checkout", "-b", safe_name, from_ref)
     return safe_name
 
@@ -212,4 +274,3 @@ def merge_base(ref1: str, ref2: str) -> str:
     """Get the merge base of two refs."""
     result = run_git("merge-base", ref1, ref2)
     return result.stdout.strip()
-
