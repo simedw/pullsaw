@@ -15,10 +15,13 @@ Split large PRs into stacked PRs using Claude Code.
 ## Installation
 
 ```bash
-# Using uv (recommended)
-uv pip install -e .
+# From PyPI
+pip install pullsaw
 
-# Or with pip
+# Or with uv
+uv pip install pullsaw
+
+# For local development
 pip install -e .
 ```
 
@@ -39,9 +42,15 @@ pullsaw --base main --head my-feature --strict --yes
 |--------|-------------|
 | `--base BRANCH` | Base branch (default: auto-detect main/master) |
 | `--head BRANCH` | Head branch (default: current branch) |
+| `--test-cmd CMD` | Override test command (e.g., `mix test test/specific`) |
+| `--check-cmd CMD` | Check command before tests (e.g., `mix compile --warnings-as-errors`) |
 | `--strict` | Fail if drift is detected vs original |
 | `--yes, -y` | Skip confirmation prompt |
 | `--dry-run` | Generate plan only, don't execute |
+| `--verbose, -v` | Show detailed output |
+| `--plan FILE` | Use existing plan file instead of generating |
+| `--continue` | Continue from current step branch |
+| `--skip` | Skip the current failed step (use with `--continue`) |
 
 ## How It Works
 
@@ -57,6 +66,14 @@ pullsaw --base main --head my-feature --strict --yes
    - Fix failures (up to N attempts)
    - Commit
 6. **Drift Check**: Verify final state matches original branch
+
+### Commit Messages & revup Integration
+
+PullSaw generates commit messages that are compatible with [revup](https://github.com/Skydio/revup), using `Topic:` and `Relative:` fields in the commit message. This allows you to upload the stacked PRs to GitHub using:
+
+```bash
+revup upload
+```
 
 ## Configuration
 
@@ -151,6 +168,10 @@ Python owns the source of truth for:
 - Committing changes
 
 Claude Code never has permission to commit, push, or checkout branches.
+
+## Author
+
+Created by [Simon Edwardsson](https://simedw.com)
 
 ## License
 
