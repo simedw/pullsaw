@@ -327,4 +327,3 @@ class Session:
             console.print(f"Check command: [dim]{' '.join(self.config.check_cmd)}[/]")
         if self.config.format_cmd:
             console.print(f"Format command: [dim]{' '.join(self.config.format_cmd)}[/]")
-

@@ -2,4 +2,3 @@
 
 # Directory name for pullsaw working files
 PULLSAW_DIR = ".pullsaw"
-

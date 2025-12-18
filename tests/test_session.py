@@ -273,4 +273,3 @@ class TestSessionDiffInfo:
         assert "lib/bar.py" in name_status
         # Stat should have file count and line changes
         assert "3 files changed" in stat or "insertions" in stat
-

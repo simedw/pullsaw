@@ -329,4 +329,3 @@ unknown_option: true
         assert any("test_cmd" in e for e in error.errors)
         assert any("max_fix_attempts" in e for e in error.errors)
         assert any("unknown_option" in e for e in error.errors)
-

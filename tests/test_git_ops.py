@@ -183,4 +183,3 @@ class TestGitOpsWithRepo:
             check=True,
         ).stdout.strip()
         assert mb == main_sha
-

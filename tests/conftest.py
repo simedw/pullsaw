@@ -82,4 +82,3 @@ def simple_plan_yaml() -> str:
               - "lib/bar.py"
             topic: "feature-bar"
         """)
-

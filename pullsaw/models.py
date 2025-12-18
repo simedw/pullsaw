@@ -174,4 +174,3 @@ class Plan:
 
     def __iter__(self) -> Iterator[Step]:
         return iter(self.steps)
-

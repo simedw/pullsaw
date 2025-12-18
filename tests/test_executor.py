@@ -126,9 +126,7 @@ class TestExecuteStep:
             ["echo"], returncode=0, stdout="OK", stderr=""
         )
 
-        branch, topic, cost = execute_step(
-            basic_step, "main", "feature", basic_config
-        )
+        branch, topic, cost = execute_step(basic_step, "main", "feature", basic_config)
 
         assert branch == "feature-step-1"
         assert topic == "my-feature"
@@ -187,9 +185,7 @@ class TestExecuteStep:
 
         mock_run_streaming.side_effect = mock_run_side_effect
 
-        branch, topic, cost = execute_step(
-            basic_step, "main", "feature", basic_config
-        )
+        branch, topic, cost = execute_step(basic_step, "main", "feature", basic_config)
 
         # Should have called fix_failures
         mock_claude.fix_failures.assert_called_once()
@@ -238,9 +234,7 @@ class TestExecuteStep:
 
     @patch("pullsaw.executor.git_ops")
     @patch("pullsaw.executor.claude_code")
-    def test_execute_step_retry_mode(
-        self, mock_claude, mock_git, basic_step, basic_config
-    ):
+    def test_execute_step_retry_mode(self, mock_claude, mock_git, basic_step, basic_config):
         """Test retry mode skips implementation."""
         mock_git.changed_files_working.return_value = {}
 
@@ -282,9 +276,7 @@ class TestExecute:
 
     @patch("pullsaw.executor.execute_step")
     @patch("pullsaw.executor.git_ops.diff_name_status")
-    def test_execute_all_steps(
-        self, mock_diff, mock_execute_step, simple_plan, basic_config
-    ):
+    def test_execute_all_steps(self, mock_diff, mock_execute_step, simple_plan, basic_config):
         """Test executing all steps in a plan."""
         mock_execute_step.side_effect = [
             ("feature-step-1", "topic-1", 0.05),
@@ -299,16 +291,12 @@ class TestExecute:
 
     @patch("pullsaw.executor.execute_step")
     @patch("pullsaw.executor.git_ops.diff_name_status")
-    def test_execute_with_start_from(
-        self, mock_diff, mock_execute_step, simple_plan, basic_config
-    ):
+    def test_execute_with_start_from(self, mock_diff, mock_execute_step, simple_plan, basic_config):
         """Test continuing from a specific step."""
         mock_execute_step.return_value = ("feature-step-2", "topic-2", 0.03)
         mock_diff.return_value = {}
 
-        branches = execute(
-            simple_plan, "main", "feature", basic_config, start_from=2
-        )
+        branches = execute(simple_plan, "main", "feature", basic_config, start_from=2)
 
         # Should include step 1 branch (already done) + step 2 (executed)
         assert len(branches) == 2
@@ -320,9 +308,7 @@ class TestExecute:
 
     @patch("pullsaw.executor.execute_step")
     @patch("pullsaw.executor.git_ops.diff_name_status")
-    def test_execute_with_skip(
-        self, mock_diff, mock_execute_step, simple_plan, basic_config
-    ):
+    def test_execute_with_skip(self, mock_diff, mock_execute_step, simple_plan, basic_config):
         """Test skipping a step."""
         mock_diff.return_value = {}
 
@@ -369,4 +355,3 @@ class TestExecute:
         # Should not raise
         branches = execute(simple_plan, "main", "feature", basic_config)
         assert len(branches) == 2
-
